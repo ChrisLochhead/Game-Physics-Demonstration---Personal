@@ -5,12 +5,12 @@ GameObject::GameObject(Shape *shape_, int x, int y, float red, float green, floa
 	: shape(shape_->Clone())
 {
 	shape->gameobject = this;
-	position.Set((float)x, (float)y);
-	velocity.Set(velx, vely);
+	position = glm::vec2((float)x, (float)y);
+	velocity = glm::vec2(velx, vely);
 	angularVelocity = 0;
 	torque = 0;
 	orient = Random(-PI, PI);
-	force.Set(0, 0);
+	force = glm::vec2(0, 0);
 	staticFriction = 0.5f;
 	dynamicFriction = 0.3f;
 	restitution = 0.2f;

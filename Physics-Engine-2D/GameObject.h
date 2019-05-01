@@ -4,7 +4,27 @@
 
 struct Shape;
 
+	float LenSqr(glm::vec2 a)
+	{
+		return a.x * a.x + a.y * a.y;
+	}
 
+	float Dot(glm::vec2 a, glm::vec2 b)
+	{
+		return a.x * b.x + a.y * b.y;
+	}
+	bool Equal(float a, float b)
+	{
+		// <= instead of < for NaN comparison safety
+		return std::abs(a - b) <= EPSILON;
+	}
+	float Random(float l, float h)
+	{
+		float a = (float)rand();
+		a /= RAND_MAX;
+		a = (h - l) * a + l;
+		return a;
+	}
 
 struct GameObject
 {
@@ -15,6 +35,7 @@ struct GameObject
 	{
 		force += f;
 	}
+
 
 	void ApplyImpulse(const glm::vec2& impulse, const glm::vec2& contactVector)
 	{
@@ -52,6 +73,7 @@ struct GameObject
 
 	// Shape interface
 	Shape *shape;
+
 
 	// Store a color in RGB format
 	float r, g, b;

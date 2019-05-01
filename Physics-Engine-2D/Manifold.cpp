@@ -27,7 +27,7 @@ void Manifold::Initialize(void)
 		// Determine if we should perform a resting collision or not
 		// The idea is if the only thing moving this object is gravity,
 		// then the collision should be performed without any restitution
-		if (rv.LenSqr() < (dt * gravity).LenSqr() + EPSILON)
+		if (LenSqr(rv) < LenSqr(dt * gravity) + EPSILON)
 			e = 0.0f;
 	}
 }
@@ -73,27 +73,27 @@ void Manifold::ApplyImpulse(void)
 		B->ApplyImpulse(impulse, rb);
 
 		// Friction impulse
-		rv = B->velocity + Cross(B->angularVelocity, rb) -
-			A->velocity - Cross(A->angularVelocity, ra);
+		rv = B->velocity + t.Cross(B->angularVelocity, rb) -
+			A->velocity - t.Cross(A->angularVelocity, ra);
 
-		glm::vec2 t = rv - (normal * Dot(rv, normal));
-		t.Normalize();
+		glm::vec2 tb = rv - (normal * t.Dot(rv, normal));
+		tb = glm::normalize(tb);
 
 		// j tangent magnitude
-		float jt = -Dot(rv, t);
+		float jt = -t.Dot(rv, tb);
 		jt /= invMassSum;
 		jt /= (float)contact_count;
 
 		// Don't apply tiny friction impulses
-		if (Equal(jt, 0.0f))
+		if (t.Equal(jt, 0.0f))
 			return;
 
 		// Coulumb's law
 		glm::vec2 tangentImpulse;
 		if (std::abs(jt) < j * sf)
-			tangentImpulse = t * jt;
+			tangentImpulse = tb * jt;
 		else
-			tangentImpulse = t * -j * df;
+			tangentImpulse = tb * -j * df;
 
 		// Apply friction impulse
 		A->ApplyImpulse(-tangentImpulse, ra);
@@ -112,6 +112,6 @@ void Manifold::PositionalCorrection(void)
 
 void Manifold::InfiniteMassCorrection(void)
 {
-	A->velocity.Set(0, 0);
-	B->velocity.Set(0, 0);
+	A->velocity = glm::vec2(0, 0);
+	B->velocity = glm::vec2(0, 0);
 }

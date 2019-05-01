@@ -19,7 +19,7 @@ void CircletoCircle(Manifold *m, GameObject *a, GameObject *b)
 	// Calculate translational vector, which is normal
 	glm::vec2 normal = b->position - a->position;
 
-	float dist_sqr = normal.LenSqr();
+	float dist_sqr = t.LenSqr(normal);
 	float radius = A->radius + B->radius;
 
 	// Not in contact
@@ -56,7 +56,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 
 	// Transform circle center to Polygon model space
 	glm::vec2 center = a->position;
-	center = B->u.Transpose() * (center - b->position);
+	center = glm::transpose(B->u) * (center - b->position);
 
 	// Find edge with minimum penetration
 	// Exact concept as using support points in Polygon vs Polygon
@@ -64,7 +64,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	int faceNormal = 0;
 	for (int i = 0; i < B->m_vertexCount; ++i)
 	{
-		float s = Dot(B->m_normals[i], center - B->m_vertices[i]);
+		float s = t.Dot(B->m_normals[i], center - B->m_vertices[i]);
 
 		if (s > A->radius)
 			return;
@@ -92,20 +92,20 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	}
 
 	// Determine which voronoi region of the edge center of circle lies within
-	float dot1 = Dot(center - v1, v2 - v1);
-	float dot2 = Dot(center - v2, v1 - v2);
+	float dot1 = t.Dot(center - v1, v2 - v1);
+	float dot2 = t.Dot(center - v2, v1 - v2);
 	m->penetration = A->radius - separation;
 
 	// Closest to v1
 	if (dot1 <= 0.0f)
 	{
-		if (DistSqr(center, v1) > A->radius * A->radius)
+		if (t.DistSqr(center, v1) > A->radius * A->radius)
 			return;
 
 		m->contact_count = 1;
 		glm::vec2 n = v1 - center;
 		n = B->u * n;
-		n.Normalize();
+		n = glm::normalize(n);
 		m->normal = n;
 		v1 = B->u * v1 + b->position;
 		m->contacts[0] = v1;
@@ -114,7 +114,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	// Closest to v2
 	else if (dot2 <= 0.0f)
 	{
-		if (DistSqr(center, v2) > A->radius * A->radius)
+		if (t.DistSqr(center, v2) > A->radius * A->radius)
 			return;
 
 		m->contact_count = 1;
@@ -122,7 +122,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 		v2 = B->u * v2 + b->position;
 		m->contacts[0] = v2;
 		n = B->u * n;
-		n.Normalize();
+		n = glm::normalize(n);
 		m->normal = n;
 	}
 
@@ -130,7 +130,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	else
 	{
 		glm::vec2 n = B->m_normals[faceNormal];
-		if (Dot(center - v1, n) > A->radius)
+		if (t.Dot(center - v1, n) > A->radius)
 			return;
 
 		n = B->u * n;
@@ -158,7 +158,7 @@ float FindAxisLeastPenetration(int *faceIndex, PolygonShape *A, PolygonShape *B)
 		glm::vec2 nw = A->u * n;
 
 		// Transform face normal into B's model space
-		Mat2 buT = B->u.Transpose();
+		glm::mat2 buT = glm::transpose(B->u);
 		n = buT * nw;
 
 		// Retrieve support point from B along -n
@@ -172,7 +172,7 @@ float FindAxisLeastPenetration(int *faceIndex, PolygonShape *A, PolygonShape *B)
 		v = buT * v;
 
 		// Compute penetration distance (in B's model space)
-		float d = Dot(n, s - v);
+		float d = t.Dot(n, s - v);
 
 		// Store greatest distance
 		if (d > bestDistance)
@@ -192,14 +192,14 @@ void FindIncidentFace(glm::vec2 *v, PolygonShape *RefPoly, PolygonShape *IncPoly
 
 	// Calculate normal in incident's frame of reference
 	referenceNormal = RefPoly->u * referenceNormal; // To world space
-	referenceNormal = IncPoly->u.Transpose() * referenceNormal; // To incident's model space
+	referenceNormal = glm::transpose(IncPoly->u) * referenceNormal; // To incident's model space
 
 																// Find most anti-normal face on incident polygon
-	int32 incidentFace = 0;
+	int incidentFace = 0;
 	float minDot = FLT_MAX;
 	for (int i = 0; i < IncPoly->m_vertexCount; ++i)
 	{
-		float dot = Dot(referenceNormal, IncPoly->m_normals[i]);
+		float dot = t.Dot(referenceNormal, IncPoly->m_normals[i]);
 		if (dot < minDot)
 		{
 			minDot = dot;
@@ -209,11 +209,11 @@ void FindIncidentFace(glm::vec2 *v, PolygonShape *RefPoly, PolygonShape *IncPoly
 
 	// Assign face vertices for incidentFace
 	v[0] = IncPoly->u * IncPoly->m_vertices[incidentFace] + IncPoly->gameobject->position;
-	incidentFace = incidentFace + 1 >= (int32)IncPoly->m_vertexCount ? 0 : incidentFace + 1;
+	incidentFace = incidentFace + 1 >= (int)IncPoly->m_vertexCount ? 0 : incidentFace + 1;
 	v[1] = IncPoly->u * IncPoly->m_vertices[incidentFace] + IncPoly->gameobject->position;
 }
 
-int32 Clip(glm::vec2 n, float c, glm::vec2 *face)
+int Clip(glm::vec2 n, float c, glm::vec2 *face)
 {
 	int sp = 0;
 	glm::vec2 out[2] = {
@@ -223,8 +223,8 @@ int32 Clip(glm::vec2 n, float c, glm::vec2 *face)
 
 	// Retrieve distances from each endpoint to the line
 	// d = ax + by - c
-	float d1 = Dot(n, face[0]) - c;
-	float d2 = Dot(n, face[1]) - c;
+	float d1 = t.Dot(n, face[0]) - c;
+	float d2 = t.Dot(n, face[1]) - c;
 
 	// If negative (behind plane) clip
 	if (d1 <= 0.0f) out[sp++] = face[0];
@@ -273,7 +273,7 @@ void PolygontoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	PolygonShape *IncPoly; // Incident
 
 						   // Determine which shape contains reference face
-	if (BiasGreaterThan(penetrationA, penetrationB))
+	if (t.BiasGreaterThan(penetrationA, penetrationB))
 	{
 		RefPoly = A;
 		IncPoly = B;
@@ -317,16 +317,16 @@ void PolygontoPolygon(Manifold *m, GameObject *a, GameObject *b)
 
 	// Calculate reference face side normal in world space
 	glm::vec2 sidePlaneNormal = (v2 - v1);
-	sidePlaneNormal.Normalize();
+	sidePlaneNormal = glm::normalize(sidePlaneNormal);
 
 	// Orthogonalize
 	glm::vec2 refFaceNormal(sidePlaneNormal.y, -sidePlaneNormal.x);
 
 	// ax + by = c
 	// c is distance from origin
-	float refC = Dot(refFaceNormal, v1);
-	float negSide = -Dot(sidePlaneNormal, v1);
-	float posSide = Dot(sidePlaneNormal, v2);
+	float refC = t.Dot(refFaceNormal, v1);
+	float negSide = -t.Dot(sidePlaneNormal, v1);
+	float posSide = t.Dot(sidePlaneNormal, v2);
 
 	// Clip incident face to reference face side planes
 	if (Clip(-sidePlaneNormal, negSide, incidentFace) < 2)
@@ -340,7 +340,7 @@ void PolygontoPolygon(Manifold *m, GameObject *a, GameObject *b)
 
 	// Keep points behind reference face
 	int cp = 0; // clipped points behind reference face
-	float separation = Dot(refFaceNormal, incidentFace[0]) - refC;
+	float separation = t.Dot(refFaceNormal, incidentFace[0]) - refC;
 	if (separation <= 0.0f)
 	{
 		m->contacts[cp] = incidentFace[0];
@@ -350,7 +350,7 @@ void PolygontoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	else
 		m->penetration = 0;
 
-	separation = Dot(refFaceNormal, incidentFace[1]) - refC;
+	separation = t.Dot(refFaceNormal, incidentFace[1]) - refC;
 	if (separation <= 0.0f)
 	{
 		m->contacts[cp] = incidentFace[1];

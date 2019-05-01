@@ -7,6 +7,20 @@
 
 #define MaxPolyVertexCount 64
 
+	float Cross(glm::vec2 a, glm::vec2 b)
+	{
+		return a.x * b.y - a.y * b.x;
+	}
+	float LenSqr(glm::vec2 a)
+	{
+		return a.x * a.x + a.y * a.y;
+	}
+
+	float Dot(glm::vec2 a, glm::vec2 b)
+	{
+		return a.x * b.x + a.y * b.y;
+	}
+
 struct Shape
 {
 	enum Type
@@ -30,7 +44,7 @@ struct Shape
 	float radius;
 
 	// For Polygon shape
-	Mat2 u; // Orientation matrix from model to world
+	glm::mat2 u; // Orientation matrix from model to world
 };
 
 struct Circle : public Shape
@@ -39,7 +53,6 @@ struct Circle : public Shape
 	{
 		radius = r;
 	}
-
 	Shape *Clone(void) const
 	{
 		return new Circle(radius);
@@ -86,7 +99,7 @@ struct Circle : public Shape
 		glm::vec2 r(0, 1.0f);
 		float c = std::cos(gameobject->orient);
 		float s = std::sin(gameobject->orient);
-		r.Set(r.x * c - r.y * s, r.x * s + r.y * c);
+		r = glm::vec2(r.x * c - r.y * s, r.x * s + r.y * c);
 		r *= radius;
 		r = r + gameobject->position;
 		glVertex2f(gameobject->position.x, gameobject->position.y);
@@ -107,7 +120,6 @@ struct PolygonShape : public Shape
 	{
 		isCannon = iscannon;
 	}
-
 	void Initialize(void)
 	{
 		ComputeMass(1.0f);
@@ -172,7 +184,7 @@ struct PolygonShape : public Shape
 
 	void SetOrient(float radians)
 	{
-		u.Set(radians);
+		u = glm::mat2(radians);
 	}
 
 	void Draw(void) const
@@ -196,47 +208,47 @@ struct PolygonShape : public Shape
 	void SetBox(float hw, float hh)
 	{
 		m_vertexCount = 4;
-		m_vertices[0].Set(-hw, -hh);
-		m_vertices[1].Set(hw, -hh);
-		m_vertices[2].Set(hw, hh);
-		m_vertices[3].Set(-hw, hh);
-		m_normals[0].Set(0.0f, -1.0f);
-		m_normals[1].Set(1.0f, 0.0f);
-		m_normals[2].Set(0.0f, 1.0f);
-		m_normals[3].Set(-1.0f, 0.0f);
+		m_vertices[0] = glm::vec2(-hw, -hh);
+		m_vertices[1] = glm::vec2(hw, -hh);
+		m_vertices[2] = glm::vec2(hw, hh);
+		m_vertices[3] = glm::vec2(-hw, hh);
+		m_normals[0] = glm::vec2(0.0f, -1.0f);
+		m_normals[1] = glm::vec2(1.0f, 0.0f);
+		m_normals[2] = glm::vec2(0.0f, 1.0f);
+		m_normals[3] = glm::vec2(-1.0f, 0.0f);
 	}
 
 	void SetCannon()
 	{
 		m_vertexCount = 4;
-		m_vertices[0].Set(3.0, 3.0f);
-		m_vertices[1].Set(0.0, 3.0f);
-		m_vertices[2].Set(-1.5f, -1.5f); 
-		m_vertices[3].Set(4.5f, -1.5f);
-		m_normals[0].Set(0.0f, -1.0f);
-		m_normals[1].Set(1.0f, 0.0f);
-		m_normals[2].Set(0.0f, 1.0f);
-		m_normals[3].Set(-1.0f, 0.0f);
+		m_vertices[0] = glm::vec2(3.0, 3.0f);
+		m_vertices[1] = glm::vec2(0.0, 3.0f);
+		m_vertices[2] = glm::vec2(-1.5f, -1.5f);
+		m_vertices[3] = glm::vec2(4.5f, -1.5f);
+		m_normals[0] = glm::vec2(0.0f, -1.0f);
+		m_normals[1] = glm::vec2(1.0f, 0.0f);
+		m_normals[2] = glm::vec2(0.0f, 1.0f);
+		m_normals[3] = glm::vec2(-1.0f, 0.0f);
 
 	}
 
 	void SetCannonBarrel()
 	{
 		m_vertexCount = 4;
-		m_vertices[0].Set(-1.0f, -5.0f);
-		m_vertices[1].Set(1.0f, -5.0f);
-		m_vertices[2].Set(1.0f, 5.0f);
-		m_vertices[3].Set(-1.0f, 5.0f);
-		m_normals[0].Set(0.0f, -1.0f);
-		m_normals[1].Set(1.0f, 0.0f);
-		m_normals[2].Set(0.0f, 1.0f);
-		m_normals[3].Set(-1.0f, 0.0f);
+		m_vertices[0] = glm::vec2(-1.0f, -5.0f);
+		m_vertices[1] = glm::vec2(1.0f, -5.0f);
+		m_vertices[2] = glm::vec2(1.0f, 5.0f);
+		m_vertices[3] = glm::vec2(-1.0f, 5.0f);
+		m_normals[0] = glm::vec2(0.0f, -1.0f);
+		m_normals[1] = glm::vec2(1.0f, 0.0f);
+		m_normals[2] = glm::vec2(0.0f, 1.0f);
+		m_normals[3] = glm::vec2(-1.0f, 0.0f);
 	}
 
 	void Set(glm::vec2 *vertices, int count)
 	{
 		// Find the right most point on the hull
-		int32 rightMost = 0;
+		int rightMost = 0;
 		float highestXCoord = vertices[0].x;
 		for (int i = 1; i < count; ++i)
 		{
@@ -253,9 +265,9 @@ struct PolygonShape : public Shape
 					rightMost = i;
 		}
 
-		int32 hull[MaxPolyVertexCount];
-		int32 outCount = 0;
-		int32 indexHull = rightMost;
+		int hull[MaxPolyVertexCount];
+		int outCount = 0;
+		int indexHull = rightMost;
 
 		for (;;)
 		{
@@ -264,8 +276,8 @@ struct PolygonShape : public Shape
 			// Search for next index that wraps around the hull
 			// by computing cross products to find the most counter-clockwise
 			// vertex in the set, given the previos hull index
-			int32 nextHullIndex = 0;
-			for (int32 i = 1; i < (int32)count; ++i)
+			int nextHullIndex = 0;
+			for (int i = 1; i < (int)count; ++i)
 			{
 				// Skip if same coordinate as we need three unique
 				// points in the set to perform a cross product
@@ -287,7 +299,7 @@ struct PolygonShape : public Shape
 
 				// Cross product is zero then e vectors are on same line
 				// therefor want to record vertex farthest along that line
-				if (c == 0.0f && e2.LenSqr() > e1.LenSqr())
+				if (c == 0.0f && LenSqr(e2) > LenSqr(e1))
 					nextHullIndex = i;
 
 			}
@@ -318,7 +330,7 @@ struct PolygonShape : public Shape
 
 			// Calculate normal with 2D cross product between vector and scalar
 			m_normals[i1] = glm::vec2(face.y, -face.x);
-			m_normals[i1].Normalize();
+			glm::normalize(m_normals[i1]);
 			//normalize(m_normals[i1]);
 		}
 	}

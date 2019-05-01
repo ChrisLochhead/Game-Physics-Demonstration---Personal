@@ -1,6 +1,6 @@
 #include "PreCompiled.h"
 
-void RenderString(int32 x, int32 y,  int s, float r, float g, float b)
+void RenderString(int x, int y,  int s, float r, float g, float b)
 {
 
 

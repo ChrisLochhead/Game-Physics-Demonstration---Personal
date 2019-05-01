@@ -68,7 +68,7 @@ void Scene::Step(void)
 	for (int i = 0; i < bodies.size(); ++i)
 	{
 		GameObject *b = bodies[i];
-		b->force.Set(0, 0);
+		b->force = glm::vec2(0, 0);
 		b->torque = 0;
 	}
 }

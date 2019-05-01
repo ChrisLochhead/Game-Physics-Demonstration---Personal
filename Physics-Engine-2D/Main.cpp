@@ -16,6 +16,14 @@ bool isShooting = false;
 int power = 0;
 int numShots = 5;
 
+	float Random(float l, float h)
+	{
+		float a = (float)rand();
+		a /= RAND_MAX;
+		a = (h - l) * a + l;
+		return a;
+	}
+
 void Mouse(int button, int state, int x, int y)
 {
 	x /= 10.0f;
@@ -33,7 +41,7 @@ void Mouse(int button, int state, int x, int y)
 			glm::vec2 *vertices = new glm::vec2[count];
 			float e = Random(5, 10);
 			for (int i = 0; i < count; ++i)
-				vertices[i].Set(Random(-e, e), Random(-e, e));
+				vertices[i] = glm::vec2(Random(-e, e), Random(-e, e));
 			poly.Set(vertices, count);
 			GameObject *b = scene.Add(&poly, x, y, Random(0.1f, 0.4f), Random(0.1f, 0.4f), Random(0.1f, 0.4f), 0, 0);
 			b->SetOrient(Random(-PI, PI));
@@ -138,7 +146,12 @@ void PhysicsLoop(void)
 
 	g_Clock.Start();
 
-	accumulator = Clamp(0.0f, 0.1f, accumulator);
+	if (accumulator > 0.1)
+		accumulator = 0.1;
+	else
+	if (accumulator < 0.0)
+		accumulator = 0.0;
+
 	while (accumulator >= dt)
 	{
 		if (!frameStepping)

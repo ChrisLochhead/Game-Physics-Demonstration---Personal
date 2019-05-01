@@ -11,7 +11,7 @@ struct Playera : public Shape{
 	int ammo;
 	int fScore;
 
-	Mat2 matrix;
+	glm::mat2 matrix;
 
 	Playera() {
 
