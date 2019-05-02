@@ -109,7 +109,7 @@ struct Shape
 
 	// For Polygon shape
 	glm::mat2 u; // Orientation matrix from model to world
-	Mat2 ub;
+
 };
 
 struct Circle : public Shape
@@ -248,7 +248,7 @@ struct PolygonShape : public Shape
 
 	void SetOrient(float radians)
 	{
-		//u = glm::mat2(radians);
+		//u = Mat2(radians);
 		float c = std::cos(radians);
 		float s = std::sin(radians);
 

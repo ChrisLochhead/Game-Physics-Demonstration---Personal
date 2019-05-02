@@ -79,7 +79,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	// Transform circle center to Polygon model space
 	glm::vec2 center = a->position;
 
-	center = glm::transpose(B->u) * (center - b->position);
+	center = /*B->u.Transpose()*/glm::transpose(B->u) * (center - b->position);
 
 	// Find edge with minimum penetration
 	// Exact concept as using support points in Polygon vs Polygon
@@ -179,21 +179,25 @@ float FindAxisLeastPenetration(int *faceIndex, PolygonShape *A, PolygonShape *B)
 		// Retrieve a face normal from A
 		glm::vec2 n = A->m_normals[i];
 		glm::vec2 nw = A->u * n;
-
+		nw = glm::vec2(A->u[0][0] * n.x + A->u[0][1] * n.y, A->u[1][0] * n.x + A->u[1][1] * n.y);
 		// Transform face normal into B's model space
 		//get the transpose
-		glm::mat2 buT = glm::transpose(B->u);
-		n = buT * nw;
-
+		glm::mat2 buT =/* B->u.Transpose();*/glm::transpose(B->u);
+		//n = buT * nw;
+		 n = glm::vec2(buT[0][0] * nw.x + buT[0][1] * nw.y, buT[1][0] * nw.x + buT[1][1] * nw.y);
+		//^ uses multiply operater - potentially the problem
 		// Retrieve support point from B along -n
 		glm::vec2 s = B->GetSupport(-n);
 
 		// Retrieve vertex on face from A, transform into
 		// B's model space
 		glm::vec2 v = A->m_vertices[i];
-		v = A->u * v + A->gameobject->position;
+		v = glm::vec2(A->u[0][0] * v.x + A->u[0][1] * v.y, A->u[1][0] * v.x + A->u[1][1] * v.y) + A->gameobject->position;
+		//v = A->u * v + A->gameobject->position;
 		v -= B->gameobject->position;
-		v = buT * v;
+		v = glm::vec2(buT[0][0] * v.x + buT[0][1] * v.y, buT[1][0] * v.x + buT[1][1] * v.y);
+		//v = buT * v;
+		
 
 		// Compute penetration distance (in B's model space)
 		float d = Dot(n, s - v);
@@ -217,7 +221,7 @@ void FindIncidentFace(glm::vec2 *v, PolygonShape *RefPoly, PolygonShape *IncPoly
 	// Calculate normal in incident's frame of reference
 	referenceNormal = RefPoly->u * referenceNormal; // To world space
 	//calculate 2D transpose
-	referenceNormal = glm::transpose(IncPoly->u) * referenceNormal; // To incident's model space
+	referenceNormal = /*IncPoly->u.Transpose()*/glm::transpose(IncPoly->u) * referenceNormal; // To incident's model space
 
 																// Find most anti-normal face on incident polygon
 	int incidentFace = 0;
