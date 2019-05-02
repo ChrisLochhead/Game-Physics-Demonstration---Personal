@@ -78,6 +78,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 
 	// Transform circle center to Polygon model space
 	glm::vec2 center = a->position;
+
 	center = glm::transpose(B->u) * (center - b->position);
 
 	// Find edge with minimum penetration
@@ -180,6 +181,7 @@ float FindAxisLeastPenetration(int *faceIndex, PolygonShape *A, PolygonShape *B)
 		glm::vec2 nw = A->u * n;
 
 		// Transform face normal into B's model space
+		//get the transpose
 		glm::mat2 buT = glm::transpose(B->u);
 		n = buT * nw;
 
@@ -214,6 +216,7 @@ void FindIncidentFace(glm::vec2 *v, PolygonShape *RefPoly, PolygonShape *IncPoly
 
 	// Calculate normal in incident's frame of reference
 	referenceNormal = RefPoly->u * referenceNormal; // To world space
+	//calculate 2D transpose
 	referenceNormal = glm::transpose(IncPoly->u) * referenceNormal; // To incident's model space
 
 																// Find most anti-normal face on incident polygon
