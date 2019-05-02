@@ -38,6 +38,5 @@ const float dt = 1.0f / 60.0f;
 #include "CollisionDetection.h"
 #include "Manifold.h"
 #include "Scene.h"
-#include "Player.h"
 
 #endif // PRECOMPILED_H
