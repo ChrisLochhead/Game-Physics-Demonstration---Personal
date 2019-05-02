@@ -29,6 +29,20 @@
 		return glm::vec2(a[0][0] * b.x + a[0][1] * b.y, a[1][0] * b.x + a[1][1] * b.y);
 	}
 
+	glm::vec2 MatrixMultiply(Mat2 a, glm::vec2 b)
+	{
+		return glm::vec2(a.m00 * b.x + a.m01 * b.y, a.m10 * b.x + a.m11 * b.y);
+	}
+
+	glm::mat2 transP(glm::mat2 m) 
+	{
+		return glm::mat2(m[0][0], m[1][0], m[0][1], m[1][1]);
+	}
+
+	Mat2 transP(Mat2 m)
+	{
+		return Mat2(m.m00, m.m10, m.m01, m.m11);
+	}
 CollisionCallback Dispatch[Shape::eCount][Shape::eCount] =
 {
 	{
@@ -85,7 +99,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	// Transform circle center to Polygon model space
 	glm::vec2 center = a->position;
 
-	center = B->u.Transpose()/*glm::transpose(B->u)*/ * (center - b->position);
+	center = MatrixMultiply(transP(B->u) , (center - b->position));
 
 	// Find edge with minimum penetration
 	// Exact concept as using support points in Polygon vs Polygon
@@ -114,8 +128,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	if (separation < EPSILON)
 	{
 		m->contact_count = 1;
-		//m->normal = MatrixMultiply(B->u * B->m_normals[faceNormal]);
-		m->normal = -(B->u * B->m_normals[faceNormal]);
+		m->normal = -MatrixMultiply(B->u , B->m_normals[faceNormal]);
 		m->contacts[0] = m->normal * A->radius + a->position;
 		m->penetration = A->radius;
 		return;
@@ -134,12 +147,10 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 
 		m->contact_count = 1;
 		glm::vec2 n = v1 - center;
-		//n = MatrixMultiply(B->u , n);
-		n = B->u * n;
+		n = MatrixMultiply(B->u , n);
 		n = glm::normalize(n);
 		m->normal = n;
-		//v1 = MatrixMultiply(B->u, v1) + b->position;
-		v1 = B->u * v1 + b->position;
+		v1 = MatrixMultiply(B->u, v1) + b->position;
 		m->contacts[0] = v1;
 	}
 
@@ -151,11 +162,9 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 
 		m->contact_count = 1;
 		glm::vec2 n = v2 - center;
-		//v2 = MatrixMultiply(B->u, v2) + b->position;
-		v2 = B->u * v2 + b->position;
+		v2 = MatrixMultiply(B->u, v2) + b->position;
 		m->contacts[0] = v2;
-		//n = MatrixMultiply(B->u, n);
-		n = B->u * n;
+		n = MatrixMultiply(B->u, n);
 		n = glm::normalize(n);
 		m->normal = n;
 	}
@@ -166,8 +175,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 		glm::vec2 n = B->m_normals[faceNormal];
 		if (Dot(center - v1, n) > A->radius)
 			return;
-		//n = MatrixMultiply(B->u, n);
-		n = B->u * n;
+		n = MatrixMultiply(B->u, n);
 		m->normal = -n;
 		m->contacts[0] = m->normal * A->radius + a->position;
 		m->contact_count = 1;
@@ -189,26 +197,25 @@ float FindAxisLeastPenetration(int *faceIndex, PolygonShape *A, PolygonShape *B)
 	{
 		// Retrieve a face normal from A
 		glm::vec2 n = A->m_normals[i];
-		//glm::vec2 nw = MatrixMultiply(A->u, n);
-		glm::vec2 nw = A->u * n;
-		// Transform face normal into B's model space
-		//get the transpose
-		Mat2 buT = B->u.Transpose();/*glm::transpose(B->u);*/
-		n = buT * nw;
-		//n = MatrixMultiply(buT, nw);
-		//^ uses multiply operater - potentially the problem
+		glm::vec2 nw = MatrixMultiply(A->u, n);
+
+		//Mat2 buT = transP(B->u);
+		glm::mat2 buT = transP(B->u);
+
+		n = MatrixMultiply(buT, nw);
+		//^ uses multiply operator - potentially the problem
 		// Retrieve support point from B along -n
 		glm::vec2 s = B->GetSupport(-n);
 
 		// Retrieve vertex on face from A, transform into
 		// B's model space
 		glm::vec2 v = A->m_vertices[i];
-		//v = MatrixMultiply(A->u, v);
-		//v += A->gameobject->position;
-		v = A->u * v + A->gameobject->position;
+		v = MatrixMultiply(A->u, v);
+		v += A->gameobject->position;
+
 		v -= B->gameobject->position;
-		//v = MatrixMultiply(buT, v);
-		v = buT * v;
+		v = MatrixMultiply(buT, v);
+
 		
 
 		// Compute penetration distance (in B's model space)
@@ -230,15 +237,14 @@ void FindIncidentFace(glm::vec2 *v, PolygonShape *RefPoly, PolygonShape *IncPoly
 {
 	glm::vec2 referenceNormal = RefPoly->m_normals[referenceIndex];
 
+
+
 	// Calculate normal in incident's frame of reference
-	referenceNormal = RefPoly->u * referenceNormal; // To world space
-	//referenceNormal = glm::vec2(RefPoly->u[0][0] * referenceNormal.x + RefPoly->u[0][1] * referenceNormal.y, RefPoly->u[1][0]
-	//	* referenceNormal.x + RefPoly->u[1][1] * referenceNormal.y);
+	referenceNormal = MatrixMultiply(RefPoly->u, referenceNormal);  
 	//calculate 2D transpose
-	//referenceNormal= IncPoly->u.Transpose();// glm::transpose(IncPoly->u);
-	//referenceNormal = glm::vec2(temp[0][0] * referenceNormal.x + temp[0][1] * referenceNormal.y, temp[1][0]
-	//	* referenceNormal.x + temp[1][1] * referenceNormal.y);
-	referenceNormal = IncPoly->u.Transpose() * referenceNormal;/*glm::transpose(IncPoly->u) * referenceNormal; // To incident's model space*/
+	glm::mat2 temp = transP(IncPoly->u);
+	//Mat2 temp = transP(IncPoly->u);
+	referenceNormal = MatrixMultiply(temp, referenceNormal);
 
 																// Find most anti-normal face on incident polygon
 	int incidentFace = 0;
@@ -254,15 +260,9 @@ void FindIncidentFace(glm::vec2 *v, PolygonShape *RefPoly, PolygonShape *IncPoly
 	}
 
 	// Assign face vertices for incidentFace
-	v[0] = IncPoly->u * IncPoly->m_vertices[incidentFace] + IncPoly->gameobject->position;
-	//v[0] = glm::vec2(IncPoly->u[0][0] * IncPoly->m_vertices[incidentFace].x + IncPoly->u[0][1] * IncPoly->m_vertices[incidentFace].y, IncPoly->u[1][0]
-	//	* IncPoly->m_vertices[incidentFace].x + IncPoly->u[1][1] * IncPoly->m_vertices[incidentFace].y);
-	//v[0] += IncPoly->gameobject->position;
+	v[0] = MatrixMultiply(IncPoly->u, IncPoly->m_vertices[incidentFace]) + IncPoly->gameobject->position;
 	incidentFace = incidentFace + 1 >= (int)IncPoly->m_vertexCount ? 0 : incidentFace + 1;
-	v[1] = IncPoly->u * IncPoly->m_vertices[incidentFace] + IncPoly->gameobject->position;
-	//v[1] = glm::vec2(IncPoly->u[0][0] * IncPoly->m_vertices[incidentFace].x + IncPoly->u[0][1] * IncPoly->m_vertices[incidentFace].y, IncPoly->u[1][0]
-	//	* IncPoly->m_vertices[incidentFace].x + IncPoly->u[1][1] * IncPoly->m_vertices[incidentFace].y);
-	//v[1] += IncPoly->gameobject->position;
+	v[1] = MatrixMultiply(IncPoly->u, IncPoly->m_vertices[incidentFace]) + IncPoly->gameobject->position;
 }
 
 int Clip(glm::vec2 n, float c, glm::vec2 *face)
@@ -364,10 +364,8 @@ void PolygontoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	glm::vec2 v2 = RefPoly->m_vertices[referenceIndex];
 
 	// Transform vertices to world space
-	//v1 = MatrixMultiply(RefPoly->u , v1) + RefPoly->gameobject->position;
-	//v2 = MatrixMultiply(RefPoly->u, v2) + RefPoly->gameobject->position;
-	v1 = RefPoly->u * v1 + RefPoly->gameobject->position;
-	v2 = RefPoly->u * v2 + RefPoly->gameobject->position;
+	v1 = MatrixMultiply(RefPoly->u , v1) + RefPoly->gameobject->position;
+	v2 = MatrixMultiply(RefPoly->u, v2) + RefPoly->gameobject->position;
 
 	// Calculate reference face side normal in world space
 	glm::vec2 sidePlaneNormal = (v2 - v1);

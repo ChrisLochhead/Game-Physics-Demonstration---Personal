@@ -7,6 +7,7 @@
 
 #define MaxPolyVertexCount 64
 
+
 struct Mat2
 {
 	union
@@ -22,14 +23,14 @@ struct Mat2
 	};
 
 	Mat2() {}
-	Mat2(float radians)
-	{
-		float c = std::cos(radians);
-		float s = std::sin(radians);
+	//Mat2(float radians)
+	//{
+	//	float c = std::cos(radians);
+	//	float s = std::sin(radians);
 
-		m00 = c; m01 = -s;
-		m10 = s; m11 = c;
-	}
+	//	m00 = c; m01 = -s;
+	//	m10 = s; m11 = c;
+	//}
 
 	Mat2(float a, float b, float c, float d)
 		: m00(a), m01(b)
@@ -38,15 +39,15 @@ struct Mat2
 	}
 
 
-	Mat2 Transpose(void) const
-	{
-		return Mat2(m00, m10, m01, m11);
-	}
+	//Mat2 Transpose(void) const
+	//{
+	//	return Mat2(m00, m10, m01, m11);
+	//}
 
-	const glm::vec2 operator*(const glm::vec2& rhs) const
-	{
-		return glm::vec2(m00 * rhs.x + m01 * rhs.y, m10 * rhs.x + m11 * rhs.y);
-	}
+	//const glm::vec2 operator*(const glm::vec2& rhs) const
+	//{
+	//	return glm::vec2(m00 * rhs.x + m01 * rhs.y, m10 * rhs.x + m11 * rhs.y);
+	//}
 
 };
 
@@ -73,8 +74,8 @@ struct Shape
 	float radius;
 
 	// For Polygon shape
-	Mat2 u; // Orientation matrix from model to world
-
+	//glm::mat2 u;
+	glm::mat2 u; // Orientation matrix from model to world
 };
 
 struct Circle : public Shape
@@ -213,21 +214,33 @@ struct PolygonShape : public Shape
 
 	void SetOrient(float radians)
 	{
-		u = Mat2(radians);
-		//float c = std::cos(radians);
-		//float s = std::sin(radians);
+	float c = std::cos(radians);
+	float s = std::sin(radians);
+	
+		u[0][0] = c; u[0][1] = -s;
+		u[1][0]= s; u[1][1]= c;
+		
+	//u.m00 = c; u.m01 = -s;
+	//u.m10 = s; u.m11 = c;
 
-		//u[0][0] = c; u[0][1] = -s;
-		//u[1][0] = s; u[1][1] = c;
+	}
+	glm::vec2 MatrixMult(glm::mat2 a, glm::vec2 b)
+	{
+		return glm::vec2(a[0][0] * b.x + a[0][1] * b.y, a[1][0] * b.x + a[1][1] * b.y);
 	}
 
+	glm::vec2 MatrixMult(Mat2 a, glm::vec2 b)
+	{
+		return glm::vec2(a.m00 * b.x + a.m01 * b.y, a.m10 * b.x + a.m11 * b.y);
+	}
 	void Draw(void) const
 	{
 		glColor3f(gameobject->r, gameobject->g, gameobject->b);
 		glBegin(GL_POLYGON);
 		for (int i = 0; i < m_vertexCount; ++i)
 		{
-			glm::vec2 v = gameobject->position + u * m_vertices[i];
+			glm::vec2 v = gameobject->position + glm::vec2(u[0][0] * m_vertices[i].x + u[0][1] * m_vertices[i].y, u[1][0] * m_vertices[i].x + u[1][1] * m_vertices[i].y);
+			//glm::vec2 v = gameobject->position + glm::vec2(u.m00 * m_vertices[i].x + u.m01 * m_vertices[i].y, u.m10 * m_vertices[i].x + u.m11 * m_vertices[i].y);
 			glVertex2f(v.x, v.y);
 		}
 		glEnd();
