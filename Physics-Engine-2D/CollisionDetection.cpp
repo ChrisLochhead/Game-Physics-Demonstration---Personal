@@ -29,20 +29,12 @@
 		return glm::vec2(a[0][0] * b.x + a[0][1] * b.y, a[1][0] * b.x + a[1][1] * b.y);
 	}
 
-	glm::vec2 MatrixMultiply(Mat2 a, glm::vec2 b)
-	{
-		return glm::vec2(a.m00 * b.x + a.m01 * b.y, a.m10 * b.x + a.m11 * b.y);
-	}
 
-	glm::mat2 transP(glm::mat2 m) 
-	{
-		return glm::mat2(m[0][0], m[1][0], m[0][1], m[1][1]);
-	}
+	//glm::mat2 transP(glm::mat2 m) 
+	//{
+	//	return glm::mat2(m[0][0], m[1][0], m[0][1], m[1][1]);
+	//}
 
-	Mat2 transP(Mat2 m)
-	{
-		return Mat2(m.m00, m.m10, m.m01, m.m11);
-	}
 CollisionCallback Dispatch[Shape::eCount][Shape::eCount] =
 {
 	{
@@ -99,7 +91,7 @@ void CircletoPolygon(Manifold *m, GameObject *a, GameObject *b)
 	// Transform circle center to Polygon model space
 	glm::vec2 center = a->position;
 
-	center = MatrixMultiply(transP(B->u) , (center - b->position));
+	center = MatrixMultiply(glm::transpose(B->u) , (center - b->position));
 
 	// Find edge with minimum penetration
 	// Exact concept as using support points in Polygon vs Polygon
@@ -199,8 +191,7 @@ float FindAxisLeastPenetration(int *faceIndex, PolygonShape *A, PolygonShape *B)
 		glm::vec2 n = A->m_normals[i];
 		glm::vec2 nw = MatrixMultiply(A->u, n);
 
-		//Mat2 buT = transP(B->u);
-		glm::mat2 buT = transP(B->u);
+		glm::mat2 buT = glm::transpose(B->u);
 
 		n = MatrixMultiply(buT, nw);
 		//^ uses multiply operator - potentially the problem
@@ -237,13 +228,10 @@ void FindIncidentFace(glm::vec2 *v, PolygonShape *RefPoly, PolygonShape *IncPoly
 {
 	glm::vec2 referenceNormal = RefPoly->m_normals[referenceIndex];
 
-
-
 	// Calculate normal in incident's frame of reference
 	referenceNormal = MatrixMultiply(RefPoly->u, referenceNormal);  
 	//calculate 2D transpose
-	glm::mat2 temp = transP(IncPoly->u);
-	//Mat2 temp = transP(IncPoly->u);
+	glm::mat2 temp = glm::transpose(IncPoly->u);
 	referenceNormal = MatrixMultiply(temp, referenceNormal);
 
 																// Find most anti-normal face on incident polygon

@@ -1,10 +1,8 @@
-//#pragma once
+#pragma once
 #ifndef MANIFOLD_H
 #define MANIFOLD_H
 
-//#include "IEMath.h"
-//#include "GameObject.h"
-
+#include <algorithm> // max, min
 struct GameObject;
 
 

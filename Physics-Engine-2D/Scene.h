@@ -1,8 +1,6 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "IEMath.h"
-
 struct Scene
 {
 	Scene(float dt, int iterations)

@@ -16,19 +16,18 @@ bool isShooting = false;
 int power = 0;
 int numShots = 5;
 
-	float Random(float l, float h)
-	{
-		float a = (float)rand();
-		a /= RAND_MAX;
-		a = (h - l) * a + l;
-		return a;
-	}
+float Random(float l, float h)
+{
+	float a = (float)rand();
+	a /= RAND_MAX;
+	a = (h - l) * a + l;
+	return a;
+}
 
 void Mouse(int button, int state, int x, int y)
 {
 	x /= 10.0f;
 	y /= 10.0f;
-
 
 	if (state == GLUT_DOWN)
 		switch (button)
@@ -36,19 +35,6 @@ void Mouse(int button, int state, int x, int y)
 		case GLUT_LEFT_BUTTON:
 		{
 
-			PolygonShape poly(false);
-			int count = (int)Random(3, MaxPolyVertexCount);
-			glm::vec2 *vertices = new glm::vec2[count];
-			float e = Random(5, 10);
-			for (int i = 0; i < count; ++i)
-				vertices[i] = glm::vec2(Random(-e, e), Random(-e, e));
-			poly.Set(vertices, count);
-			GameObject *b = scene.Add(&poly, x, y, Random(0.1f, 0.4f), Random(0.1f, 0.4f), Random(0.1f, 0.4f), 0, 0);
-			b->SetOrient(Random(-PI, PI));
-			b->restitution = 0.2f;
-			b->dynamicFriction = 0.2f;
-			b->staticFriction = 0.4f;
-			delete[] vertices;
 		}
 		break;
 		case GLUT_RIGHT_BUTTON:
@@ -100,9 +86,6 @@ void keysUp(unsigned char key, int x, int y)
 void PhysicsLoop(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
 
 	if (GetAsyncKeyState(VK_SPACE) & 0x80000000) // charging up the cannon
 	{

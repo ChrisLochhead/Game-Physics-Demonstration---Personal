@@ -125,7 +125,6 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Manifold.cpp" />
-    <ClCompile Include="PreCompiled.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Scene.cpp" />
   </ItemGroup>
@@ -133,9 +132,7 @@
     <ClInclude Include="CollisionDetection.h" />
     <ClInclude Include="GameClock.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="IEMath.h" />
     <ClInclude Include="Manifold.h" />
-    <ClInclude Include="Player.h" />
     <ClInclude Include="PreCompiled.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Scene.h" />

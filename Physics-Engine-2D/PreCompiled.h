@@ -22,8 +22,15 @@
 #include <cfloat>  // FLT_MAX
 #include <vector>
 
+#include "glm/glm.hpp"
+
+const float PI = 3.141592741f;
+const float EPSILON = 0.0001f;
+const float gravityScale = 5.0f;
+const glm::vec2 gravity(0, 10.0f * gravityScale);
+const float dt = 1.0f / 60.0f;
+
 #include "glut.h"
-#include "IEMath.h"
 #include "GameClock.h"
 #include "Render.h"
 #include "GameObject.h"

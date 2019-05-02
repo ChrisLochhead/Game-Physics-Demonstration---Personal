@@ -1,55 +1,8 @@
+#pragma once
 #ifndef SHAPE_H
 #define SHAPE_H
 
-//#include "GameObject.h"
-//#include "IEMath.h"
-//#include "glut.h"
-
 #define MaxPolyVertexCount 64
-
-
-struct Mat2
-{
-	union
-	{
-		struct
-		{
-			float m00, m01;
-			float m10, m11;
-		};
-
-		float m[2][2];
-		float v[4];
-	};
-
-	Mat2() {}
-	//Mat2(float radians)
-	//{
-	//	float c = std::cos(radians);
-	//	float s = std::sin(radians);
-
-	//	m00 = c; m01 = -s;
-	//	m10 = s; m11 = c;
-	//}
-
-	Mat2(float a, float b, float c, float d)
-		: m00(a), m01(b)
-		, m10(c), m11(d)
-	{
-	}
-
-
-	//Mat2 Transpose(void) const
-	//{
-	//	return Mat2(m00, m10, m01, m11);
-	//}
-
-	//const glm::vec2 operator*(const glm::vec2& rhs) const
-	//{
-	//	return glm::vec2(m00 * rhs.x + m01 * rhs.y, m10 * rhs.x + m11 * rhs.y);
-	//}
-
-};
 
 struct Shape
 {
@@ -74,7 +27,6 @@ struct Shape
 	float radius;
 
 	// For Polygon shape
-	//glm::mat2 u;
 	glm::mat2 u; // Orientation matrix from model to world
 };
 
@@ -198,9 +150,6 @@ struct PolygonShape : public Shape
 
 		c *= 1.0f / area;
 
-		// Translate vertices to centroid (make the centroid (0, 0)
-		// for the polygon in model space)
-		// Not floatly necessary, but I like doing this anyway
 		if (isCannon == false) {
 			for (int i = 0; i < m_vertexCount; ++i)
 				m_vertices[i] -= c;
@@ -214,25 +163,15 @@ struct PolygonShape : public Shape
 
 	void SetOrient(float radians)
 	{
+
 	float c = std::cos(radians);
 	float s = std::sin(radians);
 	
-		u[0][0] = c; u[0][1] = -s;
-		u[1][0]= s; u[1][1]= c;
-		
-	//u.m00 = c; u.m01 = -s;
-	//u.m10 = s; u.m11 = c;
+	u[0][0] = c; u[0][1] = -s;
+	u[1][0]= s; u[1][1]= c;
 
 	}
-	glm::vec2 MatrixMult(glm::mat2 a, glm::vec2 b)
-	{
-		return glm::vec2(a[0][0] * b.x + a[0][1] * b.y, a[1][0] * b.x + a[1][1] * b.y);
-	}
 
-	glm::vec2 MatrixMult(Mat2 a, glm::vec2 b)
-	{
-		return glm::vec2(a.m00 * b.x + a.m01 * b.y, a.m10 * b.x + a.m11 * b.y);
-	}
 	void Draw(void) const
 	{
 		glColor3f(gameobject->r, gameobject->g, gameobject->b);
@@ -240,7 +179,6 @@ struct PolygonShape : public Shape
 		for (int i = 0; i < m_vertexCount; ++i)
 		{
 			glm::vec2 v = gameobject->position + glm::vec2(u[0][0] * m_vertices[i].x + u[0][1] * m_vertices[i].y, u[1][0] * m_vertices[i].x + u[1][1] * m_vertices[i].y);
-			//glm::vec2 v = gameobject->position + glm::vec2(u.m00 * m_vertices[i].x + u.m01 * m_vertices[i].y, u.m10 * m_vertices[i].x + u.m11 * m_vertices[i].y);
 			glVertex2f(v.x, v.y);
 		}
 		glEnd();
@@ -372,13 +310,10 @@ struct PolygonShape : public Shape
 			int i2 = i1 + 1 < m_vertexCount ? i1 + 1 : 0;
 			glm::vec2 face = m_vertices[i2] - m_vertices[i1];
 
-			// Ensure no zero-length edges, because that's bad
-			//assert(face.LenSqr() > EPSILON * EPSILON);
 
 			// Calculate normal with 2D cross product between vector and scalar
 			m_normals[i1] = glm::vec2(face.y, -face.x);
 			glm::normalize(m_normals[i1]);
-			//normalize(m_normals[i1]);
 		}
 	}
 
