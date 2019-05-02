@@ -37,29 +37,6 @@ struct Mat2
 	{
 	}
 
-	void Set(float radians)
-	{
-		float c = std::cos(radians);
-		float s = std::sin(radians);
-
-		m00 = c; m01 = -s;
-		m10 = s; m11 = c;
-	}
-
-	Mat2 Abs(void) const
-	{
-		return Mat2(std::abs(m00), std::abs(m01), std::abs(m10), std::abs(m11));
-	}
-
-	glm::vec2 AxisX(void) const
-	{
-		return glm::vec2(m00, m10);
-	}
-
-	glm::vec2 AxisY(void) const
-	{
-		return glm::vec2(m01, m11);
-	}
 
 	Mat2 Transpose(void) const
 	{
@@ -71,18 +48,6 @@ struct Mat2
 		return glm::vec2(m00 * rhs.x + m01 * rhs.y, m10 * rhs.x + m11 * rhs.y);
 	}
 
-	const Mat2 operator*(const Mat2& rhs) const
-	{
-		// [00 01]  [00 01]
-		// [10 11]  [10 11]
-
-		return Mat2(
-			m[0][0] * rhs.m[0][0] + m[0][1] * rhs.m[1][0],
-			m[0][0] * rhs.m[0][1] + m[0][1] * rhs.m[1][1],
-			m[1][0] * rhs.m[0][0] + m[1][1] * rhs.m[1][0],
-			m[1][0] * rhs.m[0][1] + m[1][1] * rhs.m[1][1]
-		);
-	}
 };
 
 struct Shape
@@ -108,7 +73,7 @@ struct Shape
 	float radius;
 
 	// For Polygon shape
-	glm::mat2 u; // Orientation matrix from model to world
+	Mat2 u; // Orientation matrix from model to world
 
 };
 
@@ -248,12 +213,12 @@ struct PolygonShape : public Shape
 
 	void SetOrient(float radians)
 	{
-		//u = Mat2(radians);
-		float c = std::cos(radians);
-		float s = std::sin(radians);
+		u = Mat2(radians);
+		//float c = std::cos(radians);
+		//float s = std::sin(radians);
 
-		u[0][0] = c; u[0][1] = -s;
-		u[1][0] = s; u[1][1] = c;
+		//u[0][0] = c; u[0][1] = -s;
+		//u[1][0] = s; u[1][1] = c;
 	}
 
 	void Draw(void) const
