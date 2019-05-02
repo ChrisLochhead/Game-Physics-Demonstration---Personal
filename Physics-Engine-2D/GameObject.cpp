@@ -9,7 +9,12 @@ GameObject::GameObject(Shape *shape_, int x, int y, float red, float green, floa
 	velocity = glm::vec2(velx, vely);
 	angularVelocity = 0;
 	torque = 0;
-	orient = Random(-PI, PI);
+
+	float a = (float)rand();
+	a /= RAND_MAX;
+	a = PI - (-PI) * a + (-PI);
+
+	orient = a;
 	force = glm::vec2(0, 0);
 	staticFriction = 0.5f;
 	dynamicFriction = 0.3f;

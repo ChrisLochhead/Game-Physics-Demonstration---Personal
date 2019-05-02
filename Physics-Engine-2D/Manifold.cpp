@@ -19,15 +19,15 @@ void Manifold::Initialize(void)
 		// Calculate radii from COM to contact
 		glm::vec2 ra = contacts[i] - A->position;
 		glm::vec2 rb = contacts[i] - B->position;
-
-		glm::vec2 rv = B->velocity + Cross(B->angularVelocity, rb) -
-			A->velocity - Cross(A->angularVelocity, ra);
+		glm::vec2 rv = B->velocity + glm::vec2(B->angularVelocity * rb.y, -B->angularVelocity * rb.x) -
+			A->velocity - glm::vec2(A->angularVelocity * ra.y, -A->angularVelocity * ra.x);
 
 
 		// Determine if we should perform a resting collision or not
 		// The idea is if the only thing moving this object is gravity,
 		// then the collision should be performed without any restitution
-		if (LenSqr(rv) < LenSqr(dt * gravity) + EPSILON)
+		glm::vec2 tmp = dt * gravity;
+		if (rv.x * rv.x + rv.y * rv.y < tmp.x * tmp.x + tmp.y * tmp.y + EPSILON)
 			e = 0.0f;
 	}
 }
@@ -35,7 +35,7 @@ void Manifold::Initialize(void)
 void Manifold::ApplyImpulse(void)
 {
 	// Early out and positional correct if both objects have infinite mass
-	if (Equal(A->im + B->im, 0))
+	if (std::abs((A->im + B->im) - 0) <= EPSILON)
 	{
 		InfiniteMassCorrection();
 		return;
@@ -48,19 +48,19 @@ void Manifold::ApplyImpulse(void)
 		glm::vec2 rb = contacts[i] - B->position;
 
 		// Relative velocity
-		glm::vec2 rv = B->velocity + Cross(B->angularVelocity, rb) -
-			A->velocity - Cross(A->angularVelocity, ra);
+		glm::vec2 rv = B->velocity + glm::vec2(-B->angularVelocity * rb.y, B->angularVelocity * rb.x)-
+			A->velocity - glm::vec2(-A->angularVelocity * ra.y, A->angularVelocity * ra.x);
 
 		// Relative velocity along the normal
-		float contactVel = Dot(rv, normal);
+		float contactVel = rv.x * normal.x + rv.y * normal.y;
 
 		// Do not resolve if velocities are separating
 		if (contactVel > 0)
 			return;
 
-		float raCrossN = Cross(ra, normal);
-		float rbCrossN = Cross(rb, normal);
-		float invMassSum = A->im + B->im + Sqr(raCrossN) * A->iI + Sqr(rbCrossN) * B->iI;
+		float raCrossN = ra.x * normal.y - ra.y * normal.x;
+		float rbCrossN = rb.x * normal.y - rb.y * normal.x;
+		float invMassSum = A->im + B->im + (raCrossN * raCrossN) * A->iI + (rbCrossN * rbCrossN) * B->iI;
 
 		// Calculate impulse scalar
 		float j = -(1.0f + e) * contactVel;
@@ -73,19 +73,19 @@ void Manifold::ApplyImpulse(void)
 		B->ApplyImpulse(impulse, rb);
 
 		// Friction impulse
-		rv = B->velocity + t.Cross(B->angularVelocity, rb) -
-			A->velocity - t.Cross(A->angularVelocity, ra);
+		rv = B->velocity + glm::vec2(-B->angularVelocity * rb.y, B->angularVelocity * rb.x) -
+			A->velocity - glm::vec2(-A->angularVelocity * ra.y, A->angularVelocity * ra.x);
 
-		glm::vec2 tb = rv - (normal * t.Dot(rv, normal));
+		glm::vec2 tb = rv - (normal * rv.x * normal.x + rv.y * normal.y);
 		tb = glm::normalize(tb);
 
 		// j tangent magnitude
-		float jt = -t.Dot(rv, tb);
+		float jt = rv.x * tb.x + rv.y * tb.y;
 		jt /= invMassSum;
 		jt /= (float)contact_count;
 
 		// Don't apply tiny friction impulses
-		if (t.Equal(jt, 0.0f))
+		if (std::abs(jt - 0.0) <= EPSILON)
 			return;
 
 		// Coulumb's law

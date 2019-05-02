@@ -7,19 +7,6 @@
 
 #define MaxPolyVertexCount 64
 
-	float Cross(glm::vec2 a, glm::vec2 b)
-	{
-		return a.x * b.y - a.y * b.x;
-	}
-	float LenSqr(glm::vec2 a)
-	{
-		return a.x * a.x + a.y * a.y;
-	}
-
-	float Dot(glm::vec2 a, glm::vec2 b)
-	{
-		return a.x * b.x + a.y * b.y;
-	}
 
 struct Shape
 {
@@ -152,8 +139,7 @@ struct PolygonShape : public Shape
 			glm::vec2 p1(m_vertices[i1]);
 			int i2 = i1 + 1 < m_vertexCount ? i1 + 1 : 0;
 			glm::vec2 p2(m_vertices[i2]);
-
-			float D = Cross(p1, p2);
+			float D = p1.x * p2.y - p1.y * p2.x;
 			float triangleArea = 0.5f * D;
 
 			area += triangleArea;
@@ -293,13 +279,13 @@ struct PolygonShape : public Shape
 				// See : http://www.oocities.org/pcgpe/math2d.html
 				glm::vec2 e1 = vertices[nextHullIndex] - vertices[hull[outCount]];
 				glm::vec2 e2 = vertices[i] - vertices[hull[outCount]];
-				float c = Cross(e1, e2);
+				float c = e1.x * e2.y - e1.y * e2.x;
 				if (c < 0.0f)
 					nextHullIndex = i;
 
 				// Cross product is zero then e vectors are on same line
 				// therefor want to record vertex farthest along that line
-				if (c == 0.0f && LenSqr(e2) > LenSqr(e1))
+				if (c == 0.0f && e2.x * e2.x + e2.y * e2.y > e1.x * e1.x + e1.y * e1.y)
 					nextHullIndex = i;
 
 			}
@@ -344,7 +330,7 @@ struct PolygonShape : public Shape
 		for (int i = 0; i < m_vertexCount; ++i)
 		{
 			glm::vec2 v = m_vertices[i];
-			float projection = Dot(v, dir);
+			float projection = v.x * dir.x + v.y * dir.y;
 
 			if (projection > bestProjection)
 			{

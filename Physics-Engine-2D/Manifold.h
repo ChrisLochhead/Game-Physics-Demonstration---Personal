@@ -8,16 +8,6 @@
 struct GameObject;
 
 
-	glm::vec2 Cross(float a, glm::vec2 v)
-	{
-		return glm::vec2(-a * v.y, a * v.x);
-	}
-
-	inline float Sqr(float a)
-	{
-		return a * a;
-	}
-
 struct Manifold
 {
 	Manifold(GameObject *a, GameObject *b)
